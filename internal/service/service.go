@@ -14,6 +14,7 @@ import (
 // Service - интерфейс для бизнес-логики
 type Service interface {
 	CreateTask(ctx *fiber.Ctx) error
+	GetTask(ctx *fiber.Ctx, id int) error
 }
 
 type service struct {
@@ -59,6 +60,22 @@ func (s *service) CreateTask(ctx *fiber.Ctx) error {
 	response := dto.Response{
 		Status: "success",
 		Data:   map[string]int{"task_id": taskID},
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response)
+}
+
+func (s *service) GetTask(ctx *fiber.Ctx, id int) error {
+
+	task, err := s.repo.GetTask(ctx.Context(), id)
+	if err != nil {
+		s.log.Error("Failed to get task", zap.Error(err))
+		return dto.InternalServerError(ctx)
+	}
+
+	response := dto.Response{
+		Status: "success",
+		Data:   task,
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(response)

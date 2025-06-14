@@ -6,12 +6,29 @@ import (
 
 	"simple-service/internal/api/middleware"
 	"simple-service/internal/service"
+	"strconv"
+	"simple-service/internal/dto"
 )
 
 // Routers - структура для хранения зависимостей роутов
 type Routers struct {
 	Service service.Service
 }
+
+func (r *Routers) GetTaskHandler(c *fiber.Ctx) error {
+	// Получение ID из URL параметра
+	idStr := c.Params("id")
+
+	// Преобразование строки в число
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return dto.BadResponseError(c, dto.FieldIncorrect, "Invalid task ID")
+	}
+
+	// Вызов метода сервиса
+	return r.Service.GetTask(c, id)
+}
+
 
 // NewRouters - конструктор для настройки API
 func NewRouters(r *Routers, token string) *fiber.App {
@@ -30,6 +47,9 @@ func NewRouters(r *Routers, token string) *fiber.App {
 
 	// Роут для создания задачи
 	apiGroup.Post("/create_task", r.Service.CreateTask)
+
+	apiGroup.Get("/task/:id", r.GetTaskHandler)
+
 
 	return app
 }
